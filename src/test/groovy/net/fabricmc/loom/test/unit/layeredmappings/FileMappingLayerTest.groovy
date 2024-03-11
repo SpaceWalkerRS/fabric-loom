@@ -42,6 +42,7 @@ class FileMappingLayerTest extends LayeredMappingsSpecification {
 		setup:
 		intermediaryUrl = INTERMEDIARY_1_17_URL
 		mockMinecraftProvider.getVersionInfo() >> VERSION_META_1_17
+		mockLogger.info("" + mockMinecraftProvider.getVersionInfo().releaseTime())
 		setupType.setup.delegate = this
 		def mappingFile = setupType.setup.call()
 		when:
