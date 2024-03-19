@@ -42,6 +42,7 @@ import net.fabricmc.loom.LoomGradleExtension;
 import net.fabricmc.loom.api.mappings.intermediate.IntermediateMappingsProvider;
 import net.fabricmc.loom.api.mappings.layered.MappingsNamespace;
 import net.fabricmc.loom.configuration.providers.minecraft.MinecraftProvider;
+import net.fabricmc.loom.util.Constants;
 import net.fabricmc.loom.util.service.SharedService;
 import net.fabricmc.loom.util.service.SharedServiceManager;
 import net.fabricmc.mappingio.adapter.MappingNsCompleter;
@@ -88,7 +89,7 @@ public final class IntermediateMappingsService implements SharedService {
 
 		// For versions pre-1.3 the client and server namespaces do not match and have separate
 		// entries in the mappings, therefor intermediary is used as the common namespace
-		final String expectedSrcNs = minecraftProvider.canMergeJars()
+		final String expectedSrcNs = minecraftProvider.getVersionInfo().isVersionOrNewer(Constants.RELEASE_TIME_1_3)
 				? MappingsNamespace.OFFICIAL.toString() // >=1.3
 				: MappingsNamespace.INTERMEDIARY.toString(); // <1.3
 
