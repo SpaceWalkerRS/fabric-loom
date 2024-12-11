@@ -85,6 +85,7 @@ public abstract class NamedMinecraftProvider<M extends MinecraftProvider> extend
 		@Override
 		public List<MinecraftJar> provide(ProvideContext context) throws Exception {
 			final ProvideContext childContext = context.withApplyDependencies(false);
+			final List<MinecraftJar> minecraftJars = List.of(getMergedJar());
 
 			// Map the client and server jars separately
 			server.provide(childContext);
@@ -97,6 +98,10 @@ public abstract class NamedMinecraftProvider<M extends MinecraftProvider> extend
 						getMergedJar().toFile()
 			);
 
+			if (!hasBackupJars(minecraftJars)) {
+				createBackupJars(minecraftJars);
+			}
+
 			getMavenHelper(MinecraftJar.Type.MERGED).savePom();
 
 			if (context.applyDependencies()) {
@@ -106,7 +111,7 @@ public abstract class NamedMinecraftProvider<M extends MinecraftProvider> extend
 				);
 			}
 
-			return List.of(getMergedJar());
+			return minecraftJars;
 		}
 
 		@Override

@@ -78,6 +78,8 @@ public abstract sealed class IntermediaryMinecraftProvider<M extends MinecraftPr
 
 		@Override
 		public List<MinecraftJar> provide(ProvideContext context) throws Exception {
+			final List<MinecraftJar> minecraftJars = List.of(getMergedJar());
+
 			// Map the client and server jars separately
 			server.provide(context);
 			client.provide(context);
@@ -89,7 +91,11 @@ public abstract sealed class IntermediaryMinecraftProvider<M extends MinecraftPr
 						getMergedJar().toFile()
 			);
 
-			return List.of(getMergedJar());
+			if (!hasBackupJars(minecraftJars)) {
+				createBackupJars(minecraftJars);
+			}
+
+			return minecraftJars;
 		}
 
 		@Override
