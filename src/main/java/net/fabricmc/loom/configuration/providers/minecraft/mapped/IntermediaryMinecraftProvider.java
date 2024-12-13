@@ -80,18 +80,24 @@ public abstract sealed class IntermediaryMinecraftProvider<M extends MinecraftPr
 		public List<MinecraftJar> provide(ProvideContext context) throws Exception {
 			final List<MinecraftJar> minecraftJars = List.of(getMergedJar());
 
+			// this check must be done before the client and server impls are provided
+			// because the merging only needs to happen if the remapping step is run
+			final boolean mergeJars = client.shouldRemapInputs(context) || server.shouldRemapInputs(context);
+
 			// Map the client and server jars separately
 			server.provide(context);
 			client.provide(context);
 
-			// then merge them
-			MergedMinecraftProvider.mergeJars(
-						client.getEnvOnlyJar().toFile(),
-						server.getEnvOnlyJar().toFile(),
-						getMergedJar().toFile()
-			);
+			if (mergeJars) {
+				// then merge them
+				MergedMinecraftProvider.mergeJars(
+							client.getEnvOnlyJar().toFile(),
+							server.getEnvOnlyJar().toFile(),
+							getMergedJar().toFile()
+				);
+			}
 
-			if (!hasBackupJars(minecraftJars)) {
+			if (mergeJars || !hasBackupJars(minecraftJars)) {
 				createBackupJars(minecraftJars);
 			}
 

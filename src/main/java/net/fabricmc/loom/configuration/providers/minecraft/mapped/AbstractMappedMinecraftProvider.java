@@ -85,7 +85,7 @@ public abstract class AbstractMappedMinecraftProvider<M extends MinecraftProvide
 			throw new IllegalStateException("No remapped jars provided");
 		}
 
-		if (!areOutputsValid(remappedJars) || context.refreshOutputs() || !hasBackupJars(minecraftJars)) {
+		if (shouldRemapInputs(context, remappedJars, minecraftJars)) {
 			try {
 				remapInputs(remappedJars, context.configContext());
 				createBackupJars(minecraftJars);
@@ -191,6 +191,23 @@ public abstract class AbstractMappedMinecraftProvider<M extends MinecraftProvide
 
 	protected String getDependencyNotation(MinecraftJar.Type type) {
 		return "net.minecraft:%s:%s".formatted(getName(type), getVersion());
+	}
+
+	protected boolean shouldRemapInputs(ProvideContext context) {
+		final List<RemappedJars> remappedJars = getRemappedJars();
+		final List<MinecraftJar> minecraftJars = remappedJars.stream()
+				.map(RemappedJars::outputJar)
+				.toList();
+
+		if (remappedJars.isEmpty()) {
+			throw new IllegalStateException("No remapped jars provided");
+		}
+
+		return shouldRemapInputs(context, remappedJars, minecraftJars);
+	}
+
+	private boolean shouldRemapInputs(ProvideContext context, List<RemappedJars> remappedJars, List<MinecraftJar> minecraftJars) {
+		return !areOutputsValid(remappedJars) || context.refreshOutputs() || !hasBackupJars(minecraftJars);
 	}
 
 	private boolean areOutputsValid(List<RemappedJars> remappedJars) {

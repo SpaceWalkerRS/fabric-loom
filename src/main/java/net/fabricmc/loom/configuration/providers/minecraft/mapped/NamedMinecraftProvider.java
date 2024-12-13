@@ -87,18 +87,24 @@ public abstract class NamedMinecraftProvider<M extends MinecraftProvider> extend
 			final ProvideContext childContext = context.withApplyDependencies(false);
 			final List<MinecraftJar> minecraftJars = List.of(getMergedJar());
 
+			// this check must be done before the client and server impls are provided
+			// because the merging only needs to happen if the remapping step is run
+			final boolean mergeJars = client.shouldRemapInputs(childContext) || server.shouldRemapInputs(childContext);
+
 			// Map the client and server jars separately
 			server.provide(childContext);
 			client.provide(childContext);
 
-			// then merge them
-			MergedMinecraftProvider.mergeJars(
-						client.getEnvOnlyJar().toFile(),
-						server.getEnvOnlyJar().toFile(),
-						getMergedJar().toFile()
-			);
+			if (mergeJars) {
+				// then merge them
+				MergedMinecraftProvider.mergeJars(
+							client.getEnvOnlyJar().toFile(),
+							server.getEnvOnlyJar().toFile(),
+							getMergedJar().toFile()
+				);
+			}
 
-			if (!hasBackupJars(minecraftJars)) {
+			if (mergeJars || !hasBackupJars(minecraftJars)) {
 				createBackupJars(minecraftJars);
 			}
 
