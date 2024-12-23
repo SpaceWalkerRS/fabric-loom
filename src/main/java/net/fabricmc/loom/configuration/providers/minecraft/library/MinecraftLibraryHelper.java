@@ -27,6 +27,7 @@ package net.fabricmc.loom.configuration.providers.minecraft.library;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -89,12 +90,12 @@ public class MinecraftLibraryHelper {
 	}
 
 	public static List<Library> getServerLibraries(BundleMetadata bundleMetadata) {
+		Objects.requireNonNull(bundleMetadata);
+
 		var libraries = new ArrayList<Library>();
 
-		if (bundleMetadata != null) {
-			for (BundleMetadata.Entry library : bundleMetadata.libraries()) {
-				libraries.add(Library.fromMaven(library.name(), Library.Target.COMPILE));
-			}
+		for (BundleMetadata.Entry library : bundleMetadata.libraries()) {
+			libraries.add(Library.fromMaven(library.name(), Library.Target.COMPILE));
 		}
 
 		return libraries;

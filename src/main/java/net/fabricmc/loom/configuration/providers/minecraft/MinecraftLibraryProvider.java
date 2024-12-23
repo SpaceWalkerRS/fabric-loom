@@ -37,6 +37,7 @@ import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.provider.Provider;
 
 import net.fabricmc.loom.LoomGradleExtension;
+import net.fabricmc.loom.configuration.providers.BundleMetadata;
 import net.fabricmc.loom.configuration.providers.minecraft.library.Library;
 import net.fabricmc.loom.configuration.providers.minecraft.library.LibraryContext;
 import net.fabricmc.loom.configuration.providers.minecraft.library.LibraryProcessorManager;
@@ -107,7 +108,8 @@ public class MinecraftLibraryProvider {
 	}
 
 	private void provideServerLibraries() {
-		final List<Library> libraries = MinecraftLibraryHelper.getServerLibraries(minecraftProvider.getServerBundleMetadata());
+		final BundleMetadata serverBundleMetadata = minecraftProvider.getServerBundleMetadata();
+		final List<Library> libraries = serverBundleMetadata != null ? MinecraftLibraryHelper.getServerLibraries(serverBundleMetadata) : Collections.emptyList();
 		final List<Library> processLibraries = processLibraries(libraries);
 		processLibraries.forEach(this::applyServerLibrary);
 	}
