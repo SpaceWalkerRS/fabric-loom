@@ -82,6 +82,14 @@ public abstract class ProcessedNamedMinecraftProvider<M extends MinecraftProvide
 	}
 
 	@Override
+	public List<? extends OutputJar> getOutputJars() {
+		return parentMinecraftProvider.getMinecraftJars().stream()
+				.map(this::getProcessedJar)
+				.map(SimpleOutputJar::new)
+				.toList();
+	}
+
+	@Override
 	public MavenScope getMavenScope() {
 		return MavenScope.LOCAL;
 	}

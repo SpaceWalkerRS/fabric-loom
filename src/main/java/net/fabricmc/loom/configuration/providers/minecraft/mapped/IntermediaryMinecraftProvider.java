@@ -111,6 +111,13 @@ public abstract sealed class IntermediaryMinecraftProvider<M extends MinecraftPr
 		}
 
 		@Override
+		public List<? extends OutputJar> getOutputJars() {
+			return List.of(
+				new SimpleOutputJar(getMergedJar())
+			);
+		}
+
+		@Override
 		public List<MinecraftJar.Type> getDependencyTypes() {
 			return List.of(MinecraftJar.Type.MERGED);
 		}
