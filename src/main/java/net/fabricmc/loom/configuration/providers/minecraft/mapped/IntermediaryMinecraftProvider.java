@@ -82,22 +82,22 @@ public abstract sealed class IntermediaryMinecraftProvider<M extends MinecraftPr
 
 			// this check must be done before the client and server impls are provided
 			// because the merging only needs to happen if the remapping step is run
-			final boolean mergeJars = client.shouldRemapInputs(context) || server.shouldRemapInputs(context);
+			final boolean refreshOutputs = client.shouldRefreshOutputs(context)
+					|| server.shouldRefreshOutputs(context)
+					|| this.shouldRefreshOutputs(context);
 
 			// Map the client and server jars separately
 			server.provide(context);
 			client.provide(context);
 
-			if (mergeJars) {
+			if (refreshOutputs) {
 				// then merge them
 				MergedMinecraftProvider.mergeJars(
 							client.getEnvOnlyJar().toFile(),
 							server.getEnvOnlyJar().toFile(),
 							getMergedJar().toFile()
 				);
-			}
 
-			if (mergeJars || !hasBackupJars(minecraftJars)) {
 				createBackupJars(minecraftJars);
 			}
 

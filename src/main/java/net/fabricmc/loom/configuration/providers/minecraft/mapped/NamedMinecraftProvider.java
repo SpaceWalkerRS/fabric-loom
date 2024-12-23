@@ -89,22 +89,22 @@ public abstract class NamedMinecraftProvider<M extends MinecraftProvider> extend
 
 			// this check must be done before the client and server impls are provided
 			// because the merging only needs to happen if the remapping step is run
-			final boolean mergeJars = client.shouldRemapInputs(childContext) || server.shouldRemapInputs(childContext);
+			final boolean refreshOutputs = client.shouldRefreshOutputs(childContext)
+					|| server.shouldRefreshOutputs(childContext)
+					|| this.shouldRefreshOutputs(childContext);
 
 			// Map the client and server jars separately
 			server.provide(childContext);
 			client.provide(childContext);
 
-			if (mergeJars) {
+			if (refreshOutputs) {
 				// then merge them
 				MergedMinecraftProvider.mergeJars(
 							client.getEnvOnlyJar().toFile(),
 							server.getEnvOnlyJar().toFile(),
 							getMergedJar().toFile()
 				);
-			}
 
-			if (mergeJars || !hasBackupJars(minecraftJars)) {
 				createBackupJars(minecraftJars);
 			}
 

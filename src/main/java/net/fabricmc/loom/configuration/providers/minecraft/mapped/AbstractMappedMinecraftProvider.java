@@ -37,6 +37,8 @@ import java.util.StringJoiner;
 import java.util.function.Function;
 
 import org.gradle.api.Project;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.fabricmc.loom.LoomGradleExtension;
 import net.fabricmc.loom.api.mappings.layered.MappingsNamespace;
@@ -56,6 +58,8 @@ import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
 
 public abstract class AbstractMappedMinecraftProvider<M extends MinecraftProvider> implements MappedMinecraftProvider.ProviderImpl {
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMappedMinecraftProvider.class);
+
 	protected final M minecraftProvider;
 	private final Project project;
 	protected final LoomGradleExtension extension;
@@ -85,7 +89,7 @@ public abstract class AbstractMappedMinecraftProvider<M extends MinecraftProvide
 			throw new IllegalStateException("No remapped jars provided");
 		}
 
-		if (shouldRemapInputs(context, remappedJars, minecraftJars)) {
+		if (shouldRefreshOutputs(context)) {
 			try {
 				remapInputs(remappedJars, context.configContext());
 				createBackupJars(minecraftJars);
@@ -114,16 +118,6 @@ public abstract class AbstractMappedMinecraftProvider<M extends MinecraftProvide
 	public static Path getBackupJarPath(MinecraftJar minecraftJar) {
 		final Path outputJarPath = minecraftJar.getPath();
 		return outputJarPath.resolveSibling(outputJarPath.getFileName() + ".backup");
-	}
-
-	protected boolean hasBackupJars(List<MinecraftJar> minecraftJars) {
-		for (MinecraftJar minecraftJar : minecraftJars) {
-			if (!Files.exists(getBackupJarPath(minecraftJar))) {
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	protected void createBackupJars(List<MinecraftJar> minecraftJars) throws IOException {
@@ -193,31 +187,34 @@ public abstract class AbstractMappedMinecraftProvider<M extends MinecraftProvide
 		return "net.minecraft:%s:%s".formatted(getName(type), getVersion());
 	}
 
-	protected boolean shouldRemapInputs(ProvideContext context) {
+	protected boolean shouldRefreshOutputs(ProvideContext context) {
+		if (context.refreshOutputs()) {
+			LOGGER.info("Refreshing outputs for mapped jar, as refresh outputs was requested");
+			return true;
+		}
+
 		final List<RemappedJars> remappedJars = getRemappedJars();
-		final List<MinecraftJar> minecraftJars = remappedJars.stream()
-				.map(RemappedJars::outputJar)
-				.toList();
 
 		if (remappedJars.isEmpty()) {
 			throw new IllegalStateException("No remapped jars provided");
 		}
 
-		return shouldRemapInputs(context, remappedJars, minecraftJars);
-	}
-
-	private boolean shouldRemapInputs(ProvideContext context, List<RemappedJars> remappedJars, List<MinecraftJar> minecraftJars) {
-		return !areOutputsValid(remappedJars) || context.refreshOutputs() || !hasBackupJars(minecraftJars);
-	}
-
-	private boolean areOutputsValid(List<RemappedJars> remappedJars) {
 		for (RemappedJars remappedJar : remappedJars) {
 			if (!getMavenHelper(remappedJar.type()).exists(null)) {
-				return false;
+				LOGGER.info("Refreshing outputs for mapped jar, as {} does not exist", remappedJar.outputJar());
+				return true;
 			}
 		}
 
-		return true;
+		for (RemappedJars remappedJar : remappedJars) {
+			if (!Files.exists(getBackupJarPath(remappedJar.outputJar()))) {
+				LOGGER.info("Refreshing outputs for mapped jar, as backup jar does not exist for {}", remappedJar.outputJar());
+				return true;
+			}
+		}
+
+		LOGGER.debug("All outputs are up to date");
+		return false;
 	}
 
 	private void remapInputs(List<RemappedJars> remappedJars, ConfigContext configContext) throws IOException {
